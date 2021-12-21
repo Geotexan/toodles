@@ -16,65 +16,85 @@ import time
 
 DEBUG=True
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class Toodles:
+    """
+    Encapsula toda la funcionalidad del script.
+    """
+    def __init__(self, origen=None, destino=None, timeout=5):
+        """
+        Constructor.
+        :param origen: Origen de los datos (puerto serie de la báscula).
+        :param destino: Destino donde volcar los pesos leídos.
+        :param timeout: Tiempo entre lecturas en modo _daemon_.
+        """
+        self.origen = origen
+        self.destino = destino
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
+        self.timeout = timeout
 
-def capture(puerto=None):
-    """
-    Abre el puerto serie y captura el peso actual en la báscula.
-    :param puerto: puerto serie del que leerá
-    :return: peso
-    """
-    logger.info(f"Leyendo del puerto {puerto}...")
-    res = None
-    logger.info(f"Peso leído: {res}")
-    return res
-
-
-def dump(peso=None, destino=None):
-    """
-    Escribe el peso recibido en el destino especificado.
-    :param peso: Peso a volcar.
-    :param destino: Destino donde escribir el volcado.
-    """
-    logging.info(f"Escribiendo {peso} en {destino}...")
-    destino.write(str(peso))
-    logging.info("EOW")
-
-
-def run(puerto=None, destino=None):
-    """
-    Captura el peso y lo escribe en la salida.
-    :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
-    :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
-    """
-    if not destino:
-        destino = sys.stdout
-    logging.info(f"Capturando de {puerto} y volcando a {destino}...")
-    dump(capture(puerto), destino)
+    def signal_handler(self, sig, frame):
+        """
+        Captura la interrupción Ctr+C y sale _gracefully_.
+        """
+        self.logger.info("Se presionó Ctrl+C.")
+        self.destino.flush()
+        self.destino.close()
+        sys.exit(0)
 
 
-def signal_handler(sig, frame):
-    """
-    Captura la interrupción Ctr+C y sale _gracefully_.
-    """
-    logging.info("Se presionó Ctrl+C.")
-    sys.exit(0)
+    def capture(self, puerto=None):
+        """
+        Abre el puerto serie y captura el peso actual en la báscula.
+        :param puerto: puerto serie del que leerá
+        :return: peso
+        """
+        self.origen = puerto
+        self.logger.info(f"Leyendo del puerto {puerto}...")
+        res = None
+        self.logger.info(f"Peso leído: {res}")
+        return res
 
 
-def daemon(timeout=5, puerto=None, destino=None):
-    """
-    Ejecuta el programa indefinidamente leyendo el peso de la báscula cada
-    `timeout` segundos.
-    :param timeout: Segundos entre lecturas. Por defecto, 5.
-    :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
-    :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
-    """
-    signal.signal(signal.SIGINT, signal_handler)
-    print("Presiona Ctrl+C para terminar.")
-    while True:
-         run(puerto, destino)
-         time.sleep(timeout)
+    def dump(self, peso=None, destino=None):
+        """
+        Escribe el peso recibido en el destino especificado.
+        :param peso: Peso a volcar.
+        :param destino: Destino donde escribir el volcado.
+        """
+        self.destino = destino
+        self.logger.info(f"Escribiendo {peso} en {destino}...")
+        self.destino.write(str(peso))
+        self.logger.info("EOW")
+
+
+    def run(self, puerto=None, destino=None):
+        """
+        Captura el peso y lo escribe en la salida.
+        :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
+        :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
+        """
+        self.destino = destino
+        if not self.destino:
+            self.destino = sys.stdout
+        self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
+        self.dump(self.capture(puerto), self.destino)
+
+
+    def daemon(self, timeout=5, puerto=None, destino=None):
+        """
+        Ejecuta el programa indefinidamente leyendo el peso de la báscula cada
+        `timeout` segundos.
+        :param timeout: Segundos entre lecturas. Por defecto, 5.
+        :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
+        :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
+        """
+        self.timeout = timeout
+        signal.signal(signal.SIGINT, self.signal_handler)
+        print("Presiona Ctrl+C para terminar.")
+        while True:
+             self.run(puerto, destino)
+             time.sleep(self.timeout)
 
 def main():
     """
@@ -87,11 +107,12 @@ def main():
     # - `-t n`: Número de segundos entre lecturas. Si se omite, 5 segundos.
     # - `-o (stdout|file|http|ftp|smb)`: EXPERIMENTAL. Salida de los datos por fichero,
     #                             web, ftp o samba. Por defecto, a fichero.
+    toodles = Toodles()
     fire.Fire({
-        "capture": capture,
-        "dump": dump,
-        "run": run,
-        "daemon": daemon
+        "capture": toodles.capture,
+        "dump": toodles.dump,
+        "run": toodles.run,
+        "daemon": toodles.daemon
         })
     sys.exit(0)
 
