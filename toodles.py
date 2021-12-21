@@ -8,6 +8,7 @@ Lee el peso de la báscula por puerto serie y la escribe en un fichero.
 """
 
 import sys
+import serial
 
 def main():
     """
