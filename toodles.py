@@ -13,8 +13,24 @@ import fire
 import serial
 import signal
 import time
+import datetime
+import io
+import contextlib
 
-DEBUG=True
+DEBUG=False
+
+@contextlib.contextmanager
+def smart_open(filename=None):
+    if filename and filename is not sys.stdout and filename != '-':
+        fh = open(filename, 'w')
+    else:
+        fh = sys.stdout
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
+
 
 class Toodles:
     """
@@ -27,11 +43,38 @@ class Toodles:
         :param destino: Destino donde volcar los pesos leídos.
         :param timeout: Tiempo entre lecturas en modo _daemon_.
         """
+        self.HEADER = "Peso\tFechaHora\n"
         self.origen = origen
         self.destino = destino
-        logging.basicConfig(level=logging.INFO)
+        if DEBUG:
+            logging.basicConfig(level=logging.INFO)
+        else:
+            logging.basicConfig(level=logging.ERROR)
         self.logger = logging.getLogger(__name__)
         self.timeout = timeout
+
+    def _activate_debug(self, flag=True):
+        """
+        Pone el flag de depuración activo y ejecuta Toodles en modo demonio con
+        los valores por defecto.
+        :param flag: Si off o no se especifica este comando, desactiva la
+                     depuración (valor por defecto: True).
+            """
+        try:
+            flagdebug = flag.upper() in ("ON", "TRUE", "1")
+        except AttributeError:  # No es cadena.
+            if isinstance(flag, bool):
+                flagdebug = flag
+            else:
+                flagdebug = False
+        DEBUG = flagdebug
+        # Y como no sé en Fire consumir flags tras --
+        if DEBUG:
+            print("DEBUG {}".format(DEBUG))
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.ERROR)
+        self.daemon()
 
     def signal_handler(self, sig, frame):
         """
@@ -49,7 +92,8 @@ class Toodles:
         :param puerto: puerto serie del que leerá
         :return: peso
         """
-        self.origen = puerto
+        if puerto:
+            self.origen = puerto
         self.logger.info(f"Leyendo del puerto {puerto}...")
         res = None
         self.logger.info(f"Peso leído: {res}")
@@ -62,21 +106,45 @@ class Toodles:
         :param peso: Peso a volcar.
         :param destino: Destino donde escribir el volcado.
         """
-        self.destino = destino
-        self.logger.info(f"Escribiendo {peso} en {destino}...")
-        self.destino.write(str(peso))
-        self.logger.info("EOW")
+        if destino:
+            self.destino = destino
+        self.logger.info("Abriendo destino: {}".format(self.destino))
+        with smart_open(self.destino) as iostream:
+            self.logger.info(f"Escribiendo {peso} en {destino}...")
+            ahora = datetime.datetime.now()
+            strahora = ahora.strftime("%Y%m%d%H%M")
+            strpeso = str(peso)
+            iostream.write("{}\t{}".format(strpeso, strahora))
+            iostream.flush()
+            self.logger.info("EOW")
+
+    def write_header(self, destino=None):
+        """
+        Escribe la cabecera que espera leer SAP en el destino.
+        Prerrequisitos: destino debe aceptar la interfaz de _file_ y estar
+        abierto para escritura.
+        :param destino: Destino donde escribir la cabecera.
+        """
+        # Acepto parámetro en todas los métodos para poderlos usar
+        # individualmente sin especificar nada en el constructor.
+        # ¿Deberían ser métodos de clase? Probablemente.
+        if destino:
+            self.destino = destino
+        self.destino.write(self.HEADER)
+        self.destino.flush()
 
 
     def run(self, puerto=None, destino=None):
         """
-        Captura el peso y lo escribe en la salida.
+        Captura el peso y lo escribe en la salida. Hace una única iteración.
         :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
         :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
         """
-        self.destino = destino
+        if destino:
+            self.destino = destino
         if not self.destino:
             self.destino = sys.stdout
+        self.write_header(self.destino)
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
         self.dump(self.capture(puerto), self.destino)
 
@@ -89,12 +157,14 @@ class Toodles:
         :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
         :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
         """
-        self.timeout = timeout
+        if timeout is not None:
+            self.timeout = timeout
         signal.signal(signal.SIGINT, self.signal_handler)
         print("Presiona Ctrl+C para terminar.")
         while True:
              self.run(puerto, destino)
              time.sleep(self.timeout)
+
 
 def main():
     """
@@ -112,7 +182,8 @@ def main():
         "capture": toodles.capture,
         "dump": toodles.dump,
         "run": toodles.run,
-        "daemon": toodles.daemon
+        "daemon": toodles.daemon,
+        "debug": toodles._activate_debug,
         })
     sys.exit(0)
 
