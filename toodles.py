@@ -76,7 +76,7 @@ class Toodles:
             self.logger.setLevel(logging.ERROR)
         self.daemon()
 
-    def signal_handler(self, sig, frame):
+    def _signal_handler(self, sig, frame):
         """
         Captura la interrupción Ctr+C y sale _gracefully_.
         """
@@ -159,7 +159,7 @@ class Toodles:
         """
         if timeout is not None:
             self.timeout = timeout
-        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
         print("Presiona Ctrl+C para terminar.")
         while True:
              self.run(puerto, destino)
