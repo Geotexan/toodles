@@ -16,15 +16,17 @@ import time
 import datetime
 import io
 import contextlib
+from comutils import recv_peso
 
 DEBUG=False
 
 @contextlib.contextmanager
 def smart_open(filename=None):
-    if filename and filename is not sys.stdout and filename != '-':
+    if (filename and filename is not sys.stdout and filename != '-'
+            and not hasattr(filename, "write")):
         fh = open(filename, 'w')
     else:
-        fh = sys.stdout
+        fh = filename
     try:
         yield fh
     finally:
@@ -95,12 +97,14 @@ class Toodles:
         if puerto:
             self.origen = puerto
         self.logger.info(f"Leyendo del puerto {puerto}...")
-        res = None
+        if puerto:  # Si el puerto no está definido, devuelvo None.
+            res = recv_peso(puerto)
+        else:
+            res = None
         self.logger.info(f"Peso leído: {res}")
         return res
 
-
-    def dump(self, peso=None, destino=None):
+    def dump(self, peso=None, destino=None, fechahora=datetime.datetime.now()):
         """
         Escribe el peso recibido en el destino especificado.
         :param peso: Peso a volcar.
@@ -111,14 +115,13 @@ class Toodles:
         self.logger.info("Abriendo destino: {}".format(self.destino))
         with smart_open(self.destino) as iostream:
             self.logger.info(f"Escribiendo {peso} en {destino}...")
-            ahora = datetime.datetime.now()
-            strahora = ahora.strftime("%Y%m%d%H%M")
+            strahora = fechahora.strftime("%Y%m%d%H%M")
             strpeso = str(peso)
             iostream.write("{}\t{}".format(strpeso, strahora))
             iostream.flush()
             self.logger.info("EOW")
 
-    def write_header(self, destino=None):
+    def _write_header(self, destino=None):
         """
         Escribe la cabecera que espera leer SAP en el destino.
         Prerrequisitos: destino debe aceptar la interfaz de _file_ y estar
@@ -133,7 +136,6 @@ class Toodles:
         self.destino.write(self.HEADER)
         self.destino.flush()
 
-
     def run(self, puerto=None, destino=None):
         """
         Captura el peso y lo escribe en la salida. Hace una única iteración.
@@ -144,7 +146,7 @@ class Toodles:
             self.destino = destino
         if not self.destino:
             self.destino = sys.stdout
-        self.write_header(self.destino)
+        self._write_header(self.destino)
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
         self.dump(self.capture(puerto), self.destino)
 
