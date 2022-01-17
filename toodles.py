@@ -119,8 +119,8 @@ class Toodles:
             self.destino = destino
         self.logger.info("Abriendo destino: {}".format(self.destino))
         with smart_open(self.destino) as iostream:
-            self.logger.info(f"Escribiendo {peso} en {destino}...")
             strahora = fechahora.strftime("%Y%m%d%H%M")
+            self.logger.info(f"Escribiendo {peso} ({strahora}) en {destino}...")
             strpeso = str(peso)
             self._write_header(iostream)
             iostream.write("{}\t{}".format(strpeso, strahora))
