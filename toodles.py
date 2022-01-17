@@ -18,7 +18,9 @@ import io
 import contextlib
 from comutils import recv_peso
 
-DEBUG=False
+DEBUG=True
+
+#logging.basicConfig(filename="toodles.log", level=logging.DEBUG)
 
 @contextlib.contextmanager
 def smart_open(filename=None):
