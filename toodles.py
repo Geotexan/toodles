@@ -48,8 +48,6 @@ class Toodles:
         self.HEADER = "Peso\tFechaHora\n"
         self.origen = origen
         self.destino = destino
-        if isinstance(self.destino, str):
-            self.destino = open(
         if DEBUG:
             logging.basicConfig(level=logging.INFO)
         else:
