@@ -144,17 +144,14 @@ def recv_peso(puerto):
     data = recv_serial(puerto)
     try:
         estable, garbage, peso = data.split()
-        print(f">>>>>>>> Estable: {estable}; Gargage: {garbage}; Peso: {peso}")
         try:
             peso = float(peso)
         except ValueError:
             peso = None
-        print(f">>>>>>>>>>>>>>  Peso (float): {peso}")
     except ValueError:
         peso = None
         estable = None
     if estable != b'2':  # Fibra: 0=inestable, 2=estable, 3=nulo
         peso = None
-    print(f">>>>>>>>>>>>>>>>>>  Peso (final): {peso}")
     return peso
 
