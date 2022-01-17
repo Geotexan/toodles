@@ -129,7 +129,8 @@ def recv_serial(puerto):
     # El COM también tiene readline, así que eso no vale para distinguirlo
     # de mi puerto emulado con ficheros.
     try:
-        res = puerto.readline()
+        # res = puerto.readline()
+        res = puerto.read_until(expected=b'\r')
     except AttributeError:
         res = read_from_com(puerto, crc=False)
     return res
