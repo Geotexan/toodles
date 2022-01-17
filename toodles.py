@@ -85,8 +85,11 @@ class Toodles:
         Captura la interrupción Ctr+C y sale _gracefully_.
         """
         self.logger.info("Se presionó Ctrl+C.")
-        self.destino.flush()
-        self.destino.close()
+        try:
+            self.destino.flush()
+            self.destino.close()
+        except AttributeError:  # self.destino es str y ya está cerrado
+            pass
         sys.exit(0)
 
 

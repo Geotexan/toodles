@@ -153,7 +153,7 @@ def recv_peso(puerto):
     except ValueError:
         peso = None
         estable = None
-    if estable != '2':  # Fibra: 0=inestable, 2=estable, 3=nulo
+    if estable != b'2':  # Fibra: 0=inestable, 2=estable, 3=nulo
         peso = None
     print(f">>>>>>>>>>>>>>>>>>  Peso (final): {peso}")
     return peso
