@@ -144,8 +144,10 @@ def recv_peso(puerto):
     data = recv_serial(puerto)
     try:
         estable, garbage, peso = data.split()
+        print(f">>>>>>>> Estable: {estable}; Gargage: {garbaje}; Peso: {peso}")
     except ValueError:
         peso = None
+        estable = None
     if estable != '0':
         peso = None
     return peso
