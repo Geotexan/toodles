@@ -149,6 +149,7 @@ def recv_peso(puerto):
             peso = float(peso)
         except ValueError:
             peso = None
+        print(f">>>>>>>>>>>>>>  Peso (float): {peso}")
     except ValueError:
         peso = None
         estable = None
