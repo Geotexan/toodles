@@ -9,7 +9,7 @@ dependencies = [
     "pyserial",
     "fire",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.7"
 license = {text = "GPLv3"}
 
 [project.urls]
