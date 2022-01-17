@@ -16,7 +16,7 @@ import time
 import datetime
 import io
 import contextlib
-from comutils import recv_peso
+from comutils import recv_peso, EPELSA_FIBRA, EPELSA_GEOTEXTIL
 
 DEBUG=False
 
@@ -93,17 +93,25 @@ class Toodles:
         sys.exit(0)
 
 
-    def capture(self, puerto=None):
+    def capture(self, puerto=None, protocol=None):
         """
         Abre el puerto serie y captura el peso actual en la báscula.
         :param puerto: puerto serie del que leerá
+        :param protocol: protocolo fibra (0) o geotextil (1).
         :return: peso
         """
+        try:
+            assert(protocol in (EPELSA_FIBRA, EPELSA_GEOTEXTIL))
+        except AssertionError:
+            print("capture: protocol debe ser 0 (fibra) o 1 (geotextil).")
+            sys.exit(1)
+        if not protocol:
+            protocol = EPELSA_FIBRA
         if puerto:
             self.origen = puerto
         self.logger.info(f"Leyendo del puerto {puerto}...")
         if puerto:  # Si el puerto no está definido, devuelvo None.
-            res = recv_peso(puerto)
+            res = recv_peso(puerto, protocol)
         else:
             res = None
         self.logger.info(f"Peso leído: {res}")

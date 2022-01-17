@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+EPELSA_FIBRA, EPELSA_GEOTEXTIL = range(2)
+
 def get_puerto_serie(puerto = None):
     """
     Devuelve un objeto de pyserial con el
@@ -121,27 +123,46 @@ def read_from_com(com, crc=True):
     return c
 
 
-def recv_serial(puerto):
+def recv_serial(puerto, protocolo=EPELSA_FIBRA):
     """
     Lee y devuelve del puerto recibido.
     """
-    # TODO: Aquí tendré que ajustar el código para leer de verdad del puerto.
     # El COM también tiene readline, así que eso no vale para distinguirlo
     # de mi puerto emulado con ficheros.
-    try:
-        # res = puerto.readline()
-        res = puerto.read_until(expected=b'\r')
-    except AttributeError:
-        res = read_from_com(puerto, crc=False)
+    if protocolo == EPELSA_FIBRA:
+        try:
+            res = puerto.read_until(expected=b'\r')
+        except AttributeError:
+            res = read_from_com(puerto, crc=False)
+    elif protocolo == EPELSA_GEOTEXTIL:
+        try:
+            res = puerto.readline()
+        except AttributeError:
+            res = read_from_com(puerto, crc=False)
+    else:
+        res = None
     return res
 
-def recv_peso(puerto):
+def recv_peso(puerto, protocol=EPELSA_FIBRA):
     """
     Devuelve el peso en báscula si es estable. Si no, devuelve None.
     """
     if isinstance(puerto, str):
         puerto = get_puerto_serie(puerto)
-    data = recv_serial(puerto)
+    if protocol == EPELSA_FIBRA:
+        peso = recv_peso_fibra(puerto)
+    elif protocol == EPELSA_GEOTEXTIL:
+        peso = recv_peso_geotextil(puerto)
+    else:
+        peso = None
+    return peso
+
+def recv_peso_fibra(puerto):
+    """
+    Lee el peso del puerto serie según el protocolo de la báscula EPELSA de la
+    línea de fibra.
+    """
+    data = recv_serial(puerto, EPELSA_FIBRA)
     try:
         estable, garbage, peso = data.split()
         try:
@@ -152,6 +173,18 @@ def recv_peso(puerto):
         peso = None
         estable = None
     if estable != b'2':  # Fibra: 0=inestable, 2=estable, 3=nulo
+        peso = None
+    return peso
+
+def recv_peso_geotextil(puerto):
+    """
+    Lee el peso del puerto serie según el protocolo de la báscula EPELSA de la
+    línea de geotextiles.
+    """
+    data = recv_serial(puerto, EPELSA_GEOTEXTIL)
+    try:
+        peso = float(data)
+    except ValueError:
         peso = None
     return peso
 
