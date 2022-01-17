@@ -120,6 +120,7 @@ class Toodles:
             strahora = fechahora.strftime("%Y%m%d%H%M")
             strpeso = str(peso)
             self._write_header(iostream)
+            print(">>>>>>>>>>>>>> dump (peso): {peso}")
             iostream.write("{}\t{}".format(strpeso, strahora))
             iostream.flush()
             self.logger.info("EOW")
