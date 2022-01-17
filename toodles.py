@@ -109,12 +109,14 @@ class Toodles:
         self.logger.info(f"Peso leído: {res}")
         return res
 
-    def dump(self, peso=None, destino=None, fechahora=datetime.datetime.now()):
+    def dump(self, peso=None, destino=None, fechahora=None):
         """
         Escribe el peso recibido en el destino especificado.
         :param peso: Peso a volcar.
         :param destino: Destino donde escribir el volcado.
         """
+        if not fechahora:
+            fechahora = datetime.datetime.now()
         if destino:
             self.destino = destino
         self.logger.info("Abriendo destino: {}".format(self.destino))
