@@ -138,6 +138,8 @@ def recv_peso(puerto):
     """
     Devuelve el peso en báscula si es estable. Si no, devuelve None.
     """
+    if isinstance(puerto, str):
+        puerto = get_puerto_serie(puerto)
     data = recv_serial(puerto)
     try:
         estable, garbage, peso = data.split()
