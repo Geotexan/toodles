@@ -20,7 +20,7 @@ from comutils import recv_peso
 
 DEBUG=False
 
-# logging.basicConfig(filename="toodles.log", level=logging.DEBUG)
+logging.basicConfig(filename="toodles.log", level=logging.DEBUG)
 
 @contextlib.contextmanager
 def smart_open(filename=None):
