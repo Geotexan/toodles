@@ -131,7 +131,6 @@ def recv_serial(puerto):
     try:
         # res = puerto.readline()
         res = puerto.read_until(expected=b'\r')
-        print(f">>>>>>>>>>>>>>>>>>>>>>>>>>> {res}")
     except AttributeError:
         res = read_from_com(puerto, crc=False)
     return res
@@ -145,6 +144,7 @@ def recv_peso(puerto):
     data = recv_serial(puerto)
     try:
         estable, garbage, peso = data.split()
+        print(f">>>>>>>>>>>>>> {estable} {garbage} {peso}")
     except ValueError:
         peso = None
     if estable != '0':
