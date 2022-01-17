@@ -48,6 +48,8 @@ class Toodles:
         self.HEADER = "Peso\tFechaHora\n"
         self.origen = origen
         self.destino = destino
+        if isinstance(self.destino, str):
+            self.destino = open(
         if DEBUG:
             logging.basicConfig(level=logging.INFO)
         else:
@@ -133,8 +135,9 @@ class Toodles:
         # ¿Deberían ser métodos de clase? Probablemente.
         if destino:
             self.destino = destino
-        self.destino.write(self.HEADER)
-        self.destino.flush()
+        with smart_open(self.destino) as iostream:
+            iostream.write(self.HEADER)
+            iostream.flush()
 
     def run(self, puerto=None, destino=None):
         """
