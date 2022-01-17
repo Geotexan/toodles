@@ -117,25 +117,19 @@ class Toodles:
             self.logger.info(f"Escribiendo {peso} en {destino}...")
             strahora = fechahora.strftime("%Y%m%d%H%M")
             strpeso = str(peso)
+            self._write_header(iostream)
             iostream.write("{}\t{}".format(strpeso, strahora))
             iostream.flush()
             self.logger.info("EOW")
 
-    def _write_header(self, destino=None):
+    def _write_header(self, iostream):
         """
         Escribe la cabecera que espera leer SAP en el destino.
         Prerrequisitos: destino debe aceptar la interfaz de _file_ y estar
         abierto para escritura.
-        :param destino: Destino donde escribir la cabecera.
         """
-        # Acepto parámetro en todas los métodos para poderlos usar
-        # individualmente sin especificar nada en el constructor.
-        # ¿Deberían ser métodos de clase? Probablemente.
-        if destino:
-            self.destino = destino
-        with smart_open(self.destino) as iostream:
-            iostream.write(self.HEADER)
-            iostream.flush()
+        iostream.write(self.HEADER)
+        iostream.flush()
 
     def run(self, puerto=None, destino=None):
         """
@@ -147,7 +141,6 @@ class Toodles:
             self.destino = destino
         if not self.destino:
             self.destino = sys.stdout
-        self._write_header(self.destino)
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
         self.dump(self.capture(puerto), self.destino)
 
