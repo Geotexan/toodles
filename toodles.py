@@ -146,7 +146,7 @@ class Toodles:
         iostream.write(self.HEADER)
         iostream.flush()
 
-    def run(self, puerto=None, destino=None):
+    def run(self, puerto=None, destino=None, protocol=EPELSA_FIBRA):
         """
         Captura el peso y lo escribe en la salida. Hace una única iteración.
         :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
@@ -157,10 +157,11 @@ class Toodles:
         if not self.destino:
             self.destino = sys.stdout
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
-        self.dump(self.capture(puerto), self.destino)
+        self.dump(self.capture(puerto, protocol), self.destino)
 
 
-    def daemon(self, timeout=5, puerto=None, destino=None):
+    def daemon(self, timeout=5, puerto=None, destino=None,
+               protocol=EPELSA_FIBRA):
         """
         Ejecuta el programa indefinidamente leyendo el peso de la báscula cada
         `timeout` segundos.
@@ -173,7 +174,7 @@ class Toodles:
         signal.signal(signal.SIGINT, self._signal_handler)
         print("Presiona Ctrl+C para terminar.")
         while True:
-             self.run(puerto, destino)
+             self.run(puerto, destino, protocol)
              time.sleep(self.timeout)
 
 
