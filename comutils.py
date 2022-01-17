@@ -131,6 +131,7 @@ def recv_serial(puerto):
     try:
         # res = puerto.readline()
         res = puerto.read_until(expected=b'\r')
+        print(f">>>>>>>>>>>>>>>>>>>>>>>>>>> {res}")
     except AttributeError:
         res = read_from_com(puerto, crc=False)
     return res
