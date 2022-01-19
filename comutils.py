@@ -2,7 +2,7 @@
 
 EPELSA_FIBRA, EPELSA_GEOTEXTIL = range(2)
 
-def get_puerto_serie(puerto = None):
+def get_puerto_serie(puerto=None, timeout=0.5):
     """
     Devuelve un objeto de pyserial con el
     puerto correspondiente abierto. None
@@ -31,8 +31,8 @@ def get_puerto_serie(puerto = None):
         com.bytesize = 8
         com.parity = 'N'
         com.stopbits = 1
-        com.timeout = None
-        com.timeout = 0.5     # El timeout_add es bloqueante. Leeré cada medio segundo.
+        com.timeout = timeout
+        # com.timeout = 0.5     # El timeout_add es bloqueante. Leeré cada medio segundo.
     return com
 
 def buscar_puerto_serie():
@@ -65,24 +65,6 @@ def buscar_puerto_serie():
             else:
                 break
     return com
-
-def leer_raw_data(puerto = "COM1", timeout = 30):
-    """
-    Abre el puerto serie y recibe "en crudo" todos los datos
-    almacenados en el terminal.
-    Devuelve una lista con los códigos leídos.
-    """
-    raw_data = []
-    com = get_puerto_serie(puerto)
-    if com != None:
-        com.timeout = timeout
-        raw_data = com.readlines()
-        # El P360 manda los códigos separados por \r\n, pero para ello hay que configurarlo:
-        # F* -> Resetea el terminal.
-        # Cuando aún está mostrando el mensaje de inicio (antes de que aparezca "scan") pulsar F y a continuación BK.
-        # En el menú "0: System setup" -> "5: Set scan options" -> "3. DATA SUFFIX".
-        # En el mismo submenú: "6. Edit Suffix Code" (por defecto 7013 = \r\n).
-    return raw_data
 
 def read_from_com(com, crc=True):
     """
@@ -135,10 +117,14 @@ def recv_serial(puerto, protocolo=EPELSA_FIBRA):
         except AttributeError:
             res = read_from_com(puerto, crc=False)
     elif protocolo == EPELSA_GEOTEXTIL:
+        print("Leyendo EPELSA GEOTEXTIL...")
         try:
-            res = puerto.readline()
+            res = puerto.read_until(expected=b'\r')  # Bloqueante porque timeot None arriba
+            # res = puerto.readline()
+            print(">>>>>>>>>>> {}".format(res))
         except AttributeError:
             res = read_from_com(puerto, crc=False)
+            print(">>>!!!!!!!>>>>>>>> {}".format(res))
     else:
         res = None
     return res
@@ -148,7 +134,13 @@ def recv_peso(puerto, protocol=EPELSA_FIBRA):
     Devuelve el peso en báscula si es estable. Si no, devuelve None.
     """
     if isinstance(puerto, str):
-        puerto = get_puerto_serie(puerto)
+        if protocol==EPELSA_GEOTEXTIL:
+            timeout=None
+        elif protocol==EPELSA_FIBRA:
+            timeout=0.5
+        else:
+            timeout=None
+        puerto = get_puerto_serie(puerto, timeout)
     if protocol == EPELSA_FIBRA:
         peso = recv_peso_fibra(puerto)
     elif protocol == EPELSA_GEOTEXTIL:
@@ -183,8 +175,9 @@ def recv_peso_geotextil(puerto):
     """
     data = recv_serial(puerto, EPELSA_GEOTEXTIL)
     try:
-        peso = float(data)
-    except ValueError:
+        
+        peso = float(data.decode("utf8").split()[0].replace(",", "."))
+    except (ValueError, TypeError, AttributeError):
         peso = None
     return peso
 
