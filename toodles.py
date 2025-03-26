@@ -10,17 +10,18 @@ Lee el peso de la báscula por puerto serie y la escribe en un fichero.
 import sys
 import logging
 import fire
-import serial
+# import serial
 import signal
 import time
 import datetime
-import io
+# import io
 import contextlib
 from comutils import recv_peso, EPELSA_FIBRA, EPELSA_GEOTEXTIL
 
-DEBUG=False
+DEBUG = False
 
 logging.basicConfig(filename="toodles.log", level=logging.DEBUG)
+
 
 @contextlib.contextmanager
 def smart_open(filename=None):
@@ -92,7 +93,6 @@ class Toodles:
             pass
         sys.exit(0)
 
-
     def capture(self, puerto=None, protocol=None):
         """
         Abre el puerto serie y captura el peso actual en la báscula.
@@ -150,7 +150,7 @@ class Toodles:
         """
         Captura el peso y lo escribe en la salida. Hace una única iteración.
         :param puerto: Puerto del que leer (por ejemplo: COM1 o /dev/ttyS0)
-        :param destino: Destino donde escribir el volcado (por ejemplo: out.txt)
+        :param destino: Destino donde escribir el volcado (ej.: out.txt)
         """
         if destino:
             self.destino = destino
@@ -158,7 +158,6 @@ class Toodles:
             self.destino = sys.stdout
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
         self.dump(self.capture(puerto, protocol), self.destino)
-
 
     def daemon(self, timeout=5, puerto=None, destino=None,
                protocol=EPELSA_FIBRA):
@@ -174,8 +173,8 @@ class Toodles:
         signal.signal(signal.SIGINT, self._signal_handler)
         print("Presiona Ctrl+C para terminar.")
         while True:
-             self.run(puerto, destino, protocol)
-             time.sleep(self.timeout)
+            self.run(puerto, destino, protocol)
+            time.sleep(self.timeout)
 
 
 def main():
@@ -198,6 +197,7 @@ def main():
         "debug": toodles._activate_debug,
         })
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
