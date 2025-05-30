@@ -16,7 +16,7 @@ def main():
     Abre el puerto y envía una petición de peso al display.
     """
     # com = serial.Serial("/dev/ttyUSB0")
-    com = serial.Serial("COM3")
+    com = serial.Serial("COM6")
     while True:
         # com.write(0x26)
         print(time.asctime(), com.read_all())

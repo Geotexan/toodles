@@ -10,10 +10,12 @@ Lee el peso de la báscula por puerto serie y la escribe en un fichero.
 import sys
 import logging
 import fire
+
 # import serial
 import signal
 import time
 import datetime
+
 # import io
 import contextlib
 from comutils import recv_peso, EPELSA_FIBRA, EPELSA_GEOTEXTIL
@@ -25,9 +27,13 @@ logging.basicConfig(filename="toodles.log", level=logging.DEBUG)
 
 @contextlib.contextmanager
 def smart_open(filename=None):
-    if (filename and filename is not sys.stdout and filename != '-'
-            and not hasattr(filename, "write")):
-        fh = open(filename, 'w')
+    if (
+        filename
+        and filename is not sys.stdout
+        and filename != "-"
+        and not hasattr(filename, "write")
+    ):
+        fh = open(filename, "w")
     else:
         fh = filename
     try:
@@ -41,6 +47,7 @@ class Toodles:
     """
     Encapsula toda la funcionalidad del script.
     """
+
     def __init__(self, origen=None, destino=None, timeout=5):
         """
         Constructor.
@@ -64,7 +71,7 @@ class Toodles:
         los valores por defecto.
         :param flag: Si off o no se especifica este comando, desactiva la
                      depuración (valor por defecto: True).
-            """
+        """
         try:
             flagdebug = flag.upper() in ("ON", "TRUE", "1")
         except AttributeError:  # No es cadena.
@@ -101,7 +108,7 @@ class Toodles:
         :return: peso
         """
         try:
-            assert(protocol in (EPELSA_FIBRA, EPELSA_GEOTEXTIL))
+            assert protocol in (EPELSA_FIBRA, EPELSA_GEOTEXTIL)
         except AssertionError:
             print("capture: protocol debe ser 0 (fibra) o 1 (geotextil).")
             sys.exit(1)
@@ -159,8 +166,7 @@ class Toodles:
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
         self.dump(self.capture(puerto, protocol), self.destino)
 
-    def daemon(self, timeout=5, puerto=None, destino=None,
-               protocol=EPELSA_FIBRA):
+    def daemon(self, timeout=5, puerto=None, destino=None, protocol=EPELSA_FIBRA):
         """
         Ejecuta el programa indefinidamente leyendo el peso de la báscula cada
         `timeout` segundos.
@@ -189,13 +195,15 @@ def main():
     # - `-o (stdout|file|http|ftp|smb)`: EXPERIMENTAL. Salida de los datos por fichero,
     #                             web, ftp o samba. Por defecto, a fichero.
     toodles = Toodles()
-    fire.Fire({
-        "capture": toodles.capture,
-        "dump": toodles.dump,
-        "run": toodles.run,
-        "daemon": toodles.daemon,
-        "debug": toodles._activate_debug,
-        })
+    fire.Fire(
+        {
+            "capture": toodles.capture,
+            "dump": toodles.dump,
+            "run": toodles.run,
+            "daemon": toodles.daemon,
+            "debug": toodles._activate_debug,
+        }
+    )
     sys.exit(0)
 
 
