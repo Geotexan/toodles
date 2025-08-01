@@ -183,7 +183,7 @@ def recv_peso_fibra(puerto):
     """
     data = recv_serial(puerto, EPELSA_FIBRA)
     try:
-        estable, garbage, peso = data.split()
+        estable, peso = data.split()
         try:
             peso = float(peso)
         except ValueError:
@@ -191,7 +191,7 @@ def recv_peso_fibra(puerto):
     except ValueError:
         peso = None
         estable = None
-    if estable != b"2":  # Fibra: 0=inestable, 2=estable, 3=nulo
+    if estable != b'\x02A':  # Fibra: 0=inestable, 2=estable, 3=nulo
         peso = None
     return peso
 

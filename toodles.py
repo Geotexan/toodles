@@ -164,7 +164,13 @@ class Toodles:
         if not self.destino:
             self.destino = sys.stdout
         self.logger.info(f"Capturando de {puerto} y volcando a {destino}...")
-        self.dump(self.capture(puerto, protocol), self.destino)
+        peso = self.capture(puerto, protocol)
+        if peso:
+            self.logger.info(f"Peso capturado: {peso}.")
+            self.dump(peso, self.destino)
+            self.logger.info(f"Peso {peso} volcado a {destino}.")
+        else:
+            self.logger.warning(f"Peso nulo. No se escribe a {destino}.")
 
     def daemon(self, timeout=5, puerto=None, destino=None, protocol=EPELSA_FIBRA):
         """
